@@ -7,6 +7,14 @@ export class UserRepository {
     });
   }
 
+ 
+async findByEmail(email: string) {
+  return await prisma.bgUser.findFirst({
+    where: { email }
+  });
+}
+
+
   // Cria a conta master no site
   async createWebAccount(userId: string, passwordHash: string, email: string) {
     

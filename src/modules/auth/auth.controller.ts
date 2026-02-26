@@ -34,4 +34,25 @@ export class AuthController {
             res.status(400).json({ error: error.message });
         };
     };
+
+    public login = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const loginData = {
+                userId: req.body.userId,
+                passwd: req.body.passwd
+            };
+
+            if (!loginData.userId || !loginData.passwd) {
+                res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
+                return;
+            }
+            const result = await this.authService.login(loginData);
+            res.status(200).json(result);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+
 }
