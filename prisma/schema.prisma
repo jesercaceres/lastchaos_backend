@@ -1,0 +1,1121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model bg_game_event {
+  idx            Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_code      Int       @default(0) @db.UnsignedInt
+  game_money     BigInt?   @default(0) @db.UnsignedBigInt
+  chk_use        String    @default("N") @db.Char(1)
+  get_date       DateTime? @db.DateTime(0)
+  join_game_type String    @default("24") @db.Char(2)
+  bg_game_type   Int       @default(0) @db.UnsignedSmallInt
+  update_date    DateTime? @db.DateTime(0)
+
+  @@index([bg_game_type], map: "bg_game_event_bg_game_type")
+  @@index([chk_use])
+  @@index([user_code])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model bg_game_event_goods {
+  egoods_index       Int       @id @default(autoincrement()) @db.UnsignedInt
+  egoods_user_code   Int       @default(0) @db.UnsignedInt
+  egoods_site_code   String    @default("24") @db.VarChar(10)
+  egoods_item_no     Int?
+  egoods_cnt         BigInt    @default(0) @db.UnsignedBigInt
+  egoods_enable      Int       @default(1) @db.UnsignedTinyInt
+  egoods_create_date DateTime  @default(dbgenerated("'2005-10-10 00:00:00'")) @db.DateTime(0)
+  egoods_use_date    DateTime? @default(dbgenerated("'2005-10-10 00:00:00'")) @db.DateTime(0)
+  egoods_give_place  String    @default("web") @db.VarChar(10)
+  egoods_event_name  String    @default("CARD") @db.VarChar(15)
+
+  @@index([egoods_create_date], map: "idx_date")
+  @@index([egoods_user_code, egoods_site_code, egoods_enable], map: "idx_user_code")
+}
+
+model BgUser {
+  userCode      Int       @map("user_code") @default(autoincrement()) @db.UnsignedInt
+  userId        String    @map("user_id") @unique(map: "user_id") @db.VarChar(30)
+
+  passwd        String?   @db.VarChar(255)
+  passwordPlain String?   @map("passwd_plain") @db.VarChar(100)
+
+  email         String?   @db.VarChar(100)
+
+  activated     Int       @db.Int
+
+  createDate    DateTime  @map("create_date") @db.DateTime(0)
+  updateTime    DateTime  @map("update_time") @db.DateTime(0)
+  lastLoginDate DateTime? @map("last_login_date") @db.Timestamp(0)
+
+  chkTester     String?   @map("chk_tester") @db.Char(1)
+  partnerId     String?   @map("partner_id") @db.Char(2)
+  chkService    String?   @map("chk_service") @db.Char(1)
+  activePasswd  String?   @map("active_passwd") @db.VarChar(100)
+  activeTime    DateTime? @map("active_time") @db.DateTime(0)
+  jumin         String?   @db.VarChar(50)
+  cash          Int?      @db.Int
+  aCash         Int?      @map("a_cash") @db.Int
+
+  @@id([userCode, activated])
+  @@map("bg_user")
+}
+
+model bg_user_active {
+  active_index  Int      @id @default(autoincrement()) @db.UnsignedInt
+  active_code   Int      @default(0) @db.UnsignedInt
+  active_game   String   @default("24") @db.Char(3)
+  active_time   DateTime @default(dbgenerated("'2006-04-20 00:00:00'")) @db.DateTime(0)
+  active_passwd String   @default("") @db.VarChar(50)
+
+  @@unique([active_code, active_game], map: "idx_user")
+  @@index([active_index], map: "active_index")
+}
+
+model bg_user_bk {
+  user_code     Int      @id @default(autoincrement()) @db.UnsignedInt
+  user_id       String   @unique(map: "user_id") @default("0") @db.VarChar(30)
+  passwd        String   @default("0") @db.VarChar(32)
+  chk_tester    String   @default("N") @db.Char(1)
+  jumin         String?  @default("0") @db.VarChar(20)
+  chk_service   String?  @default("Y") @db.Char(1)
+  partner_id    String   @default("LC") @db.Char(2)
+  active_passwd String   @default("0") @db.VarChar(15)
+  active_time   DateTime @db.DateTime(0)
+  create_date   DateTime @db.DateTime(0)
+  password_old  String?  @db.VarChar(15)
+  enc_jumin1    String   @default("0") @db.VarChar(32)
+  enc_jumin3    Int      @default(0) @db.UnsignedTinyInt
+
+  @@index([passwd], map: "passwd")
+}
+
+model rcslog {
+  id      Int       @id @default(autoincrement())
+  Type    String?   @default("SYSTEM") @db.VarChar(100)
+  Message String?   @db.VarChar(1000)
+  Date    DateTime? @db.DateTime(0)
+}
+
+model t_affinitylakin {
+  a_index          Int      @id @default(autoincrement())
+  a_user_index     Int      @default(0)
+  a_char_index     Int      @default(0)
+  a_affinity_point Int      @default(0)
+  a_server         Int      @default(0) @db.TinyInt
+  a_datestamp      DateTime @db.DateTime(0)
+}
+
+model t_charinfo_db {
+  a_index     Int    @id @default(autoincrement())
+  a_type      Int    @default(-1)
+  a_db_name   String @default("") @db.VarChar(255)
+  a_db_ip     String @default("") @db.VarChar(255)
+  a_db_dbname String @default("") @db.VarChar(255)
+  a_db_id     String @default("") @db.VarChar(255)
+  a_db_pw     String @default("") @db.VarChar(255)
+}
+
+model t_charinfo_db_copy {
+  a_index     Int    @id @default(autoincrement())
+  a_type      Int    @default(-1)
+  a_db_name   String @default("") @db.VarChar(255)
+  a_db_ip     String @default("") @db.VarChar(255)
+  a_db_dbname String @default("") @db.VarChar(255)
+  a_db_id     String @default("") @db.VarChar(255)
+  a_db_pw     String @default("") @db.VarChar(255)
+}
+
+model t_charinfo_log {
+  a_index         Int      @id @default(autoincrement())
+  a_id            String   @default("") @db.VarChar(255)
+  a_datetime      DateTime @db.DateTime(0)
+  a_code          Int      @default(0)
+  a_target_user   Int      @default(0)
+  a_target_char   Int      @default(0)
+  a_target_server Int      @default(0)
+  a_comment       String   @default("") @db.VarChar(255)
+  a_sql           String   @db.Text
+
+  @@index([a_code], map: "idx_code")
+  @@index([a_datetime], map: "idx_datetime")
+  @@index([a_id], map: "idx_id")
+  @@index([a_target_server, a_target_user, a_target_char], map: "idx_target")
+}
+
+model t_charinfo_user {
+  a_index                 Int                                     @id @default(autoincrement())
+  a_id                    String                                  @unique(map: "idx_id") @default("") @db.VarChar(255)
+  a_pw                    String                                  @default("") @db.VarChar(255)
+  a_state                 String                                  @default("") @db.VarChar(50)
+  a_comment               String                                  @default("") @db.VarChar(255)
+  a_priv_disconnect       t_charinfo_user_a_priv_disconnect       @default(N)
+  a_priv_char_delete      t_charinfo_user_a_priv_char_delete      @default(N)
+  a_priv_char_block       t_charinfo_user_a_priv_char_block       @default(N)
+  a_priv_char_recover     t_charinfo_user_a_priv_char_recover     @default(N)
+  a_priv_char_changename  t_charinfo_user_a_priv_char_changename  @default(N)
+  a_priv_inven            t_charinfo_user_a_priv_inven            @default(N)
+  a_priv_view_castle      t_charinfo_user_a_priv_view_castle      @default(N)
+  a_priv_view_guild       t_charinfo_user_a_priv_view_guild       @default(N)
+  a_priv_guild_changename t_charinfo_user_a_priv_guild_changename @default(N)
+  a_priv_log_all          t_charinfo_user_a_priv_log_all          @default(N)
+  a_priv_guild_changeboss t_charinfo_user_a_priv_guild_changeboss @default(N)
+  a_priv_user_comment     t_charinfo_user_a_priv_user_comment     @default(N)
+  a_priv_autogive         t_charinfo_user_a_priv_autogive         @default(N)
+}
+
+model t_charinfo_usercomment {
+  a_user_index   Int    @id @default(0)
+  a_user_comment String @default("") @db.VarChar(255)
+}
+
+model t_connect_b1 {
+  a_index   Int      @id @default(autoincrement())
+  a_count   Int      @default(0)
+  a_date    DateTime @db.DateTime(0)
+  a_server  Int      @default(0) @db.UnsignedInt
+  a_sub_num Int      @default(0) @db.UnsignedInt
+}
+
+model t_connect_count {
+  a_index       Int       @id @default(autoincrement()) @db.UnsignedInt
+  a_count       Int       @default(0) @db.UnsignedInt
+  a_date        DateTime? @db.DateTime(0)
+  a_server      Int?      @default(0)
+  a_sub_num     Int?      @default(0) @db.UnsignedInt
+  a_zone_num    Int       @default(0) @db.UnsignedInt
+  a_area        String?   @default("BJ") @db.Char(2)
+  a_level_count String?   @db.VarChar(255)
+
+  @@index([a_date], map: "a_date")
+  @@index([a_sub_num, a_zone_num], map: "a_sub_num")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_connect_daily {
+  a_index Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_date  DateTime @unique(map: "a_date") @db.Date
+  a_count Int      @default(0) @db.UnsignedInt
+}
+
+model t_connect_log {
+  a_index  Int      @id @default(autoincrement())
+  a_idname String   @default("") @db.VarChar(25)
+  a_date   DateTime @db.DateTime(0)
+  a_ip     String?  @default("0.0.0.0") @db.VarChar(20)
+
+  @@index([a_date], map: "idx_date")
+  @@index([a_ip], map: "idx_ip")
+}
+
+model t_connect_max {
+  a_index       Int       @id @default(autoincrement()) @db.UnsignedInt
+  a_count       Int?      @default(0) @db.UnsignedInt
+  a_count_max   Int?      @default(0) @db.UnsignedInt
+  a_date        DateTime? @db.Date
+  a_server      Int?      @default(0)
+  a_sub_num     Int?      @default(0) @db.UnsignedInt
+  a_zone_num    Int       @default(0) @db.UnsignedInt
+  a_level_count String?   @db.VarChar(255)
+
+  @@index([a_date], map: "idx_date")
+  @@index([a_date, a_sub_num, a_zone_num, a_server], map: "idx_date_sub_zone")
+  @@index([a_server, a_sub_num], map: "idx_server")
+}
+
+model t_connect_nm {
+  a_index   Int      @id @default(autoincrement())
+  a_count   Int      @default(0)
+  a_date    DateTime @db.DateTime(0)
+  a_server  Int      @default(0) @db.UnsignedInt
+  a_sub_num Int      @default(0) @db.UnsignedInt
+}
+
+model t_connect_status {
+  a_server  Int @default(0) @db.UnsignedInt
+  a_sub_num Int @default(0) @db.UnsignedInt
+  a_count   Int @default(0) @db.UnsignedInt
+
+  @@id([a_server, a_sub_num])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_count_external_id {
+  a_index      Int    @id @default(autoincrement())
+  a_partner_id String @default("0") @db.Char(2)
+
+  @@unique([a_index, a_partner_id], map: "a_index")
+  @@index([a_index, a_partner_id], map: "a_index_2")
+}
+
+model t_createevent_1 {
+  a_user_index Int  @id @default(0)
+  a_server     Int?
+  a_char_index Int?
+}
+
+model t_createevent_7 {
+  a_user_index Int  @id @default(0)
+  a_server     Int?
+  a_char_index Int?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_ct_limit {
+  a_server Int @default(-1)
+  a_ct_id  Int @default(-1)
+  a_sell   Int @default(0)
+  a_limit  Int @default(0)
+
+  @@id([a_ct_id, a_server])
+  @@index([a_ct_id], map: "a_ct_id_2")
+}
+
+model t_eur2_promotion {
+  a_key        String   @unique(map: "a_key") @default("") @db.VarChar(20)
+  a_user_index Int      @default(0)
+  a_char_index Int      @default(0)
+  a_use_date   DateTime @db.DateTime(0)
+
+  @@index([a_user_index], map: "a_user_index")
+}
+
+model t_event {
+  a_index       Int      @unique(map: "a_index") @default(autoincrement()) @db.UnsignedInt
+  a_good_name   String   @default("00") @db.VarChar(30)
+  a_good_index  Int      @default(0) @db.UnsignedInt
+  a_idname      String   @default("0") @db.VarChar(30)
+  a_user_index  Int      @default(0) @db.UnsignedInt
+  a_week_index  Int      @default(1) @db.UnsignedTinyInt
+  a_create_date DateTime @default(dbgenerated("'2004-12-28 00:00:00'")) @db.DateTime(0)
+  a_event_point Int      @default(5) @db.UnsignedTinyInt
+
+  @@id([a_index, a_user_index])
+  @@index([a_user_index, a_week_index], map: "a_user_index")
+  @@index([a_good_index], map: "char_index")
+}
+
+model t_event_2pan4pan {
+  a_user_index Int @id @default(0)
+  a_lastchaos  Int @default(0)
+  a_2pan4pan   Int @default(0)
+  a_ssawar     Int @default(0)
+  a_laghaim    Int @default(0)
+  a_noraba     Int @default(0)
+}
+
+model t_event_attendance {
+  a_user_idx Int @id @default(0)
+  a_count    Int @default(0)
+  a_reward   Int @default(0) @db.TinyInt
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_event_bennigans {
+  a_user_index Int      @default(0)
+  a_use_count  Int      @default(0) @db.UnsignedInt
+  a_datetime   DateTime @db.DateTime(0)
+
+  @@index([a_user_index, a_use_count], map: "Index")
+  @@ignore
+}
+
+model t_event_bjmono_2007 {
+  a_user_index   Int  @id @default(0)
+  a_ticket_count Int  @default(0)
+  a_used_ticket  Int? @default(0)
+}
+
+model t_event_flowertree_point {
+  a_server     Int      @id @default(0)
+  a_point      Int      @default(0) @db.UnsignedInt
+  a_lastupdate DateTime @db.DateTime(0)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_event_gift_2007 {
+  a_server_no  Int?
+  a_user_index Int  @default(0)
+  a_char_index Int?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_event_gift_2007_adult {
+  a_server_no  Int?
+  a_user_index Int  @default(0)
+  a_char_index Int?
+
+  @@ignore
+}
+
+model t_event_gomdori_count {
+  a_server     Int      @id @default(0)
+  a_count      Int      @default(0)
+  a_updatedate DateTime @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_event_nom {
+  user_index   Int       @id @default(0) @db.UnsignedInt
+  char_index   Int       @default(0) @db.UnsignedInt
+  lottery_yn   Int?      @default(0) @db.UnsignedTinyInt
+  lottery_date DateTime? @db.DateTime(0)
+  lottery_give Int?      @default(1) @db.UnsignedTinyInt
+}
+
+model t_event_openbeta {
+  a_index    Int      @default(autoincrement())
+  a_useridx  Int      @default(0) @db.UnsignedInt
+  a_charidx  Int      @default(0) @db.UnsignedInt
+  a_givedate DateTime @db.DateTime(0)
+
+  @@id([a_index, a_useridx])
+}
+
+model t_event_sshot_2007 {
+  a_user_index  Int       @id @default(0)
+  a_used        Int       @default(0) @db.TinyInt
+  a_update_date DateTime? @db.DateTime(0)
+}
+
+model t_event_usercomeback {
+  a_user_idx   Int      @id @unique(map: "a_user_idx") @default(0) @db.UnsignedInt
+  a_server_num Int?     @default(0) @db.UnsignedTinyInt
+  a_char_idx   Int?     @default(0) @db.UnsignedInt
+  a_gift_date  DateTime @db.DateTime(0)
+}
+
+model t_event_xmastree_point {
+  a_server     Int      @id @default(0)
+  a_point      Int      @default(0) @db.UnsignedInt
+  a_lastupdate DateTime @db.DateTime(0)
+}
+
+model t_fame_ranking {
+  a_index     Int      @id @default(autoincrement())
+  a_username  String?  @default("0") @db.VarChar(50)
+  a_server    Int      @default(0) @db.SmallInt
+  a_rank      Int      @default(0) @db.UnsignedInt
+  a_charindex Int?     @default(0)
+  a_charname  String?  @default("0") @db.VarChar(50)
+  a_level     Int?     @default(0)
+  a_fame      Int?     @default(0)
+  a_job       Int?     @default(0) @db.TinyInt
+  a_job2      Int?     @default(0) @db.TinyInt
+  a_guildname String?  @default("0") @db.VarChar(50)
+  a_date      DateTime @db.DateTime(0)
+
+  @@index([a_date], map: "a_date")
+}
+
+model t_game_ip {
+  a_index       Int     @id @default(autoincrement()) @db.UnsignedInt
+  a_shop_idname String? @db.VarChar(30)
+  a_ip_prefix   String  @default("127.0.0") @db.VarChar(12)
+  a_ip_start    Int     @default(0) @db.UnsignedTinyInt
+  a_ip_end      Int     @default(255) @db.UnsignedTinyInt
+  a_enable      Int     @default(1) @db.UnsignedTinyInt
+  a_note        String  @default("") @db.VarChar(20)
+
+  @@index([a_shop_idname], map: "a_shop_idname")
+  @@index([a_ip_prefix], map: "i_ip_prefix")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_gm_ip_allow {
+  a_gmid String? @db.VarChar(20)
+  a_gmip String? @db.VarChar(50)
+
+  @@ignore
+}
+
+model t_gmtool_chatmonitor {
+  a_index     Int      @default(autoincrement())
+  a_charindex Int      @default(0)
+  a_server    Int      @default(0)
+  a_subno     Int      @default(0)
+  a_type      Int      @default(0)
+  a_chat      String   @default("") @db.VarChar(255)
+  a_date      DateTime @db.DateTime(0)
+
+  @@id([a_index, a_charindex])
+}
+
+model t_gmtool_chatting {
+  a_index    Int      @id @default(autoincrement())
+  a_server   Int      @default(0)
+  a_sub      Int      @default(0)
+  a_gmindex  Int      @default(0)
+  a_gmname   String   @default("") @db.VarChar(50)
+  a_charname String   @default("") @db.VarChar(50)
+  a_chat     String   @default("") @db.VarChar(255)
+  a_date     DateTime @db.DateTime(0)
+}
+
+model t_gmtool_command {
+  a_index     Int      @id @default(autoincrement())
+  a_gmindex   Int      @default(0)
+  a_gmname    String   @default("") @db.VarChar(50)
+  a_date      DateTime @db.DateTime(0)
+  a_gmcommand String   @default("") @db.VarChar(255)
+}
+
+model t_gpara_promotion_2007 {
+  a_index      Int @id @default(autoincrement())
+  a_user_index Int @unique(map: "idx_user_index") @default(0)
+  a_server     Int @default(0)
+  a_char_index Int @default(0)
+}
+
+model t_guild_point_rank_all {
+  a_index       Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_server      Int      @default(0)
+  a_guild_index Int      @default(0)
+  a_guild_name  String   @default("") @db.VarChar(50)
+  a_rank        Int      @default(0)
+  a_guild_point Int      @default(0)
+  a_insertdate  DateTime @db.DateTime(0)
+
+  @@index([a_insertdate], map: "idx_insertdate")
+  @@index([a_rank], map: "idx_rank")
+  @@index([a_server], map: "idx_server")
+}
+
+model t_guild_rank_all_exp {
+  a_index       Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_server      Int      @default(0)
+  a_guild_index Int      @default(0)
+  a_guild_name  String   @default("") @db.VarChar(50)
+  a_rank        Int      @default(0)
+  a_insertdate  DateTime @db.DateTime(0)
+
+  @@index([a_insertdate], map: "idx_insertdate")
+  @@index([a_rank], map: "idx_rank")
+  @@index([a_server], map: "idx_server")
+}
+
+model t_guild_rank_all_general {
+  a_index       Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_server      Int      @default(0)
+  a_guild_index Int      @default(0)
+  a_guild_name  String   @default("") @db.VarChar(50)
+  a_rank        Int      @default(0)
+  a_insertdate  DateTime @db.DateTime(0)
+
+  @@index([a_insertdate], map: "idx_insertdate")
+  @@index([a_rank], map: "idx_rank")
+  @@index([a_server], map: "idx_server")
+}
+
+model t_guild_rank_month_exp {
+  a_index       Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_server      Int      @default(0)
+  a_guild_index Int      @default(0)
+  a_guild_name  String   @default("") @db.VarChar(50)
+  a_rank        Int      @default(0)
+  a_insertdate  DateTime @db.DateTime(0)
+
+  @@index([a_insertdate], map: "idx_insertdate")
+  @@index([a_rank], map: "idx_rank")
+  @@index([a_server], map: "idx_server")
+}
+
+model t_guild_rank_month_general {
+  a_index       Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_server      Int      @default(0)
+  a_guild_index Int      @default(0)
+  a_guild_name  String   @default("") @db.VarChar(50)
+  a_rank        Int      @default(0)
+  a_insertdate  DateTime @db.DateTime(0)
+
+  @@index([a_insertdate], map: "idx_insertdate")
+  @@index([a_rank], map: "idx_rank")
+  @@index([a_server], map: "idx_server")
+}
+
+model t_ip_block {
+  a_index Int     @id @default(autoincrement())
+  a_ip    String? @db.VarChar(50)
+
+  @@unique([a_index, a_ip], map: "a_index")
+  @@index([a_index, a_ip], map: "a_index_2")
+}
+
+model t_ip_log {
+  a_index Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_ip    String   @default("0") @db.VarChar(20)
+  a_date  DateTime @db.DateTime(0)
+}
+
+model t_iplist {
+  a_index      Int    @id @default(autoincrement())
+  a_ipstart_N  BigInt @default(0)
+  a_ipend_N    BigInt @default(0)
+  a_nation_S   String @default("") @db.VarChar(50)
+  a_nationcode Int    @default(-1)
+}
+
+model t_key {
+  a_index    Int       @id @default(autoincrement()) @db.UnsignedInt
+  a_strkey   String    @unique(map: "idx_strKey") @default("000000000000") @db.VarChar(15)
+  a_enable   Int       @default(0) @db.UnsignedTinyInt
+  a_kind     String    @default("0") @db.VarChar(30)
+  a_use_date DateTime? @db.DateTime(0)
+
+  @@index([a_kind], map: "idx_kind")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_lacarette_log {
+  a_user_idx    Int       @default(0) @db.UnsignedInt
+  a_char_idx    Int       @default(0) @db.UnsignedInt
+  a_date        DateTime? @db.Date
+  a_repeat      Int       @default(0) @db.UnsignedInt
+  a_repeat_date DateTime  @db.Date
+
+  @@ignore
+}
+
+model t_lc_time {
+  a_server Int     @id @unique(map: "a_server") @default(0)
+  a_time   BigInt? @default(0)
+
+  @@index([a_server], map: "a_server_2")
+}
+
+model t_lc_time_test {
+  a_server Int     @id @unique(map: "a_server") @default(0)
+  a_time   BigInt? @default(0)
+
+  @@index([a_server], map: "a_server_2")
+}
+
+model t_manage_db {
+  a_index   Int                @id @default(autoincrement())
+  a_type    t_manage_db_a_type @default(CHAR)
+  a_enable  Int                @default(1) @db.TinyInt
+  a_name    String             @default("") @db.VarChar(20)
+  a_db_ip   String             @default("") @db.VarChar(16)
+  a_db_id   String             @default("") @db.VarChar(20)
+  a_db_pw   String             @default("") @db.VarChar(20)
+  a_db_name String             @default("") @db.VarChar(20)
+}
+
+model t_manage_log {
+  a_index      Int      @id @default(autoincrement())
+  a_master_idx Int      @default(0)
+  a_date       DateTime @db.DateTime(0)
+  a_server     String   @default("") @db.VarChar(20)
+  a_char_idx   Int      @default(0)
+  a_user_idx   Int      @default(0)
+  a_comment    String   @default("") @db.VarChar(255)
+
+  @@index([a_master_idx], map: "a_idname")
+}
+
+model t_manage_users {
+  a_index       Int                     @id @default(autoincrement())
+  a_idname      String                  @unique(map: "a_idname") @default("") @db.VarChar(30)
+  a_passwd      String                  @default("") @db.VarChar(15)
+  a_enable      Int?                    @default(1) @db.UnsignedInt
+  a_master      t_manage_users_a_master @default(N)
+  a_recent      DateTime                @db.DateTime(0)
+  a_login       Int                     @default(0) @db.TinyInt
+  a_serial_code String                  @default("") @db.Char(1)
+  a_serial_num  Int                     @default(0)
+
+  @@index([a_passwd], map: "a_passwd")
+}
+
+model t_new_promoitem {
+  a_index        Int @default(autoincrement())
+  a_section_type Int @default(0)
+  a_item_idx     Int @default(0)
+  a_item_count   Int @default(0)
+  a_item_plus    Int @default(0)
+  a_item_flag    Int @default(0)
+
+  @@id([a_index, a_section_type])
+}
+
+model t_new_promotion {
+  a_index          Int      @default(autoincrement()) @db.UnsignedInt
+  a_enable         Int      @default(0) @db.TinyInt
+  a_use_state      Int      @default(0) @db.TinyInt
+  a_section_string String   @default("") @db.VarChar(30)
+  a_section_type   Int      @default(0)
+  a_start_date     DateTime @db.DateTime(0)
+  a_end_date       DateTime @db.DateTime(0)
+  a_use_date       DateTime @db.DateTime(0)
+  a_key_string     String   @default("") @db.VarChar(20)
+
+  @@id([a_index, a_section_type])
+}
+
+model t_ns_card {
+  a_user_index Int      @id @default(0)
+  a_usetime    DateTime @db.DateTime(0)
+}
+
+model t_ocn_goo_promotion_2008 {
+  a_index      Int  @id @default(autoincrement())
+  a_user_index Int? @unique(map: "a_user_index") @default(0)
+  a_server     Int? @default(0)
+  a_char_index Int? @default(0)
+}
+
+model t_pcbang {
+  a_index  Int     @id @default(autoincrement())
+  a_ip     String? @unique(map: "a_ip") @db.Char(15)
+  a_enable Int?    @default(0) @db.TinyInt
+
+  @@index([a_index, a_ip], map: "a_index")
+}
+
+model t_pcbang_2nd {
+  a_index  Int    @id @default(autoincrement()) @db.UnsignedInt
+  a_enable Int    @default(0) @db.TinyInt
+  a_ip     String @unique(map: "a_ip") @default("") @db.VarChar(50)
+}
+
+model t_pcbang_ip {
+  ip          String   @default("") @db.VarChar(15)
+  expire_time DateTime @db.DateTime(0)
+  grade       Int      @default(0)
+
+  @@id([ip, expire_time])
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_pcbang_log {
+  a_user_idx Int      @default(0) @db.UnsignedInt
+  a_ip       String   @default("") @db.VarChar(16)
+  a_action   Int      @default(0) @db.TinyInt
+  a_update   DateTime @db.DateTime(0)
+
+  @@ignore
+}
+
+model t_pcbang_userindex {
+  user_index  Int      @default(0)
+  expire_time DateTime @db.DateTime(0)
+  grade       Int      @default(0)
+
+  @@id([user_index, expire_time])
+}
+
+model t_pcc_error {
+  a_index       Int      @id @default(autoincrement())
+  a_idname      String   @default("") @db.VarChar(30)
+  a_old_ip      String   @default("") @db.VarChar(16)
+  a_new_ip      String?  @db.VarChar(16)
+  a_error       String   @default("") @db.VarChar(30)
+  a_update_date DateTime @db.DateTime(0)
+}
+
+model t_pcc_users {
+  a_index   Int     @id @default(autoincrement()) @db.UnsignedInt
+  a_idname  String  @default("") @db.VarChar(30)
+  a_passwd  String  @default("") @db.VarChar(50)
+  a_connect Int     @default(0) @db.UnsignedTinyInt
+  a_mac     String? @db.VarChar(20)
+  a_admin   Int     @default(0) @db.UnsignedTinyInt
+
+  @@index([a_idname], map: "a_idname")
+}
+
+model t_promotion2_key {
+  a_index        Int      @default(autoincrement()) @db.UnsignedInt
+  a_strKey       String   @unique(map: "a_strKey") @default("0") @db.VarChar(25)
+  a_user_idx     Int      @default(0) @db.UnsignedInt
+  a_enable       Int      @default(1) @db.UnsignedTinyInt
+  a_kind         Int      @default(0) @db.UnsignedTinyInt
+  a_use_char_idx Int      @default(0) @db.UnsignedInt
+  a_use_date     DateTime @db.DateTime(0)
+
+  @@id([a_index, a_strKey])
+}
+
+model t_promotion_key {
+  a_index        Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_strKey       String   @default("0") @db.VarChar(25)
+  a_user_idx     Int      @default(0) @db.UnsignedInt
+  a_enable       Int      @default(1) @db.UnsignedTinyInt
+  a_kind         Int      @default(0) @db.UnsignedTinyInt
+  a_use_char_idx Int      @default(0) @db.UnsignedInt
+  a_use_date     DateTime @db.DateTime(0)
+
+  @@index([a_strKey], map: "a_strKey")
+}
+
+model t_ranking {
+  a_index     Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_username  String?  @default("0") @db.VarChar(50)
+  a_server    Int      @default(0) @db.UnsignedSmallInt
+  a_rank      Int?     @default(0) @db.UnsignedInt
+  a_charindex Int?     @default(0) @db.UnsignedInt
+  a_charname  String?  @default("0") @db.VarChar(50)
+  a_level     Int?     @default(0) @db.UnsignedInt
+  a_exp       BigInt?  @default(0)
+  a_job       Int?     @default(0) @db.UnsignedTinyInt
+  a_job2      Int?     @default(0) @db.UnsignedTinyInt
+  a_guildname String?  @default("0") @db.VarChar(50)
+  a_date      DateTime @db.DateTime(0)
+
+  @@index([a_date], map: "a_date")
+}
+
+model t_ranking_adult {
+  a_index     Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_username  String?  @default("0") @db.VarChar(50)
+  a_server    Int      @default(0) @db.UnsignedSmallInt
+  a_rank      Int?     @default(0) @db.UnsignedInt
+  a_charindex Int?     @default(0) @db.UnsignedInt
+  a_charname  String?  @default("0") @db.VarChar(50)
+  a_level     Int?     @default(0) @db.UnsignedInt
+  a_exp       BigInt?  @default(0)
+  a_job       Int?     @default(0) @db.UnsignedTinyInt
+  a_job2      Int?     @default(0) @db.UnsignedTinyInt
+  a_guildname String?  @default("0") @db.VarChar(50)
+  a_date      DateTime @db.DateTime(0)
+
+  @@index([a_date], map: "a_date")
+}
+
+model t_requital_check0 {
+  a_index      Int @id @default(autoincrement()) @db.UnsignedInt
+  a_user_index Int @default(0) @db.UnsignedInt
+
+  @@index([a_user_index], map: "user_idx")
+}
+
+model t_requital_check1 {
+  a_index      Int @id @default(autoincrement()) @db.UnsignedInt
+  a_user_index Int @default(0) @db.UnsignedInt
+
+  @@index([a_index], map: "a_index")
+}
+
+model t_reserv_name_3 {
+  a_index      Int    @id @default(autoincrement()) @db.UnsignedInt
+  a_user_idx   Int    @default(0)
+  a_char_idx   Int    @default(0)
+  a_server_cur Int    @default(0) @db.UnsignedTinyInt
+  a_name_cur   String @default("") @db.VarChar(50)
+  a_server_new Int    @default(3) @db.UnsignedTinyInt
+  a_name_new   String @default("") @db.VarChar(50)
+
+  @@unique([a_name_new, a_server_new], map: "a_new_name")
+  @@unique([a_char_idx, a_server_cur], map: "idx_rhkdghTlchlrdh")
+  @@index([a_user_idx], map: "idx_user_id")
+}
+
+model t_spn_usr {
+  a_index  Int     @id @default(autoincrement()) @db.UnsignedInt
+  a_id     String  @default("") @db.VarChar(50)
+  a_nation String? @db.VarChar(50)
+  a_ip     String? @db.VarChar(50)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_testchar {
+  color String? @db.Char(1)
+
+  @@ignore
+}
+
+model t_users {
+  a_index          Int       @id @default(autoincrement())
+  a_idname         String    @unique(map: "a_idname") @default("") @db.VarChar(30)
+  a_passwd         String    @default("") @db.VarChar(255)
+  a_portal_index   Int       @unique(map: "idx_portal_index") @default(0) @db.UnsignedInt
+  a_regi_date      DateTime? @db.DateTime(0)
+  a_end_date       DateTime? @db.DateTime(0)
+  a_enable         Int?      @default(1) @db.UnsignedInt
+  a_server_num     Int       @default(-1)
+  a_subnum         Int       @default(-1)
+  a_zone_num       Int       @default(-1)
+  a_timestamp      Int?      @default(0) @db.UnsignedInt
+  a_preopen_chk    Int       @default(0) @db.TinyInt
+  a_eventpoint     Int       @default(10)
+  a_eventpoint_use Int       @default(0) @db.UnsignedInt
+  a_stash_passwd   String    @default("") @db.VarChar(50)
+  a_stash_sealed   Int       @default(0) @db.TinyInt
+  a_stash_password String    @default("") @db.VarChar(16)
+  a_pcbang_time    Int       @default(0) @db.UnsignedInt
+  a_block_time     Int       @default(0)
+  a_fail_count     Int       @default(0)
+  a_login_time     Int       @default(0)
+  a_restart        Int       @default(0)
+  a_lastip         String?   @db.VarChar(15)
+  a_lastnation     String?   @db.Char(3)
+
+  @@index([a_passwd], map: "a_passwd")
+  @@index([a_server_num, a_subnum], map: "a_sub_num")
+  @@index([a_zone_num], map: "idx_zone_num")
+}
+
+model t_users_block {
+  a_index       Int      @id @default(autoincrement()) @db.UnsignedInt
+  a_idname      String?  @db.VarChar(30)
+  a_portal_idx  Int      @default(-1)
+  a_game_idx    Int?     @default(-1)
+  a_admin_name  String?  @default("admin") @db.VarChar(30)
+  a_contents    String?  @db.Text
+  a_reason      Int      @default(0)
+  a_modify_date DateTime @default(dbgenerated("'2000-01-01 00:00:00'")) @db.DateTime(0)
+  a_detail      String?  @db.VarChar(255)
+
+  @@index([a_idname, a_portal_idx], map: "a_idname")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_wishlist {
+  a_userindex Int     @id @default(0) @db.UnsignedInt
+  a_ctids     String? @db.VarChar(65)
+}
+
+model tbl_attendance {
+  Idx       Int      @id @default(autoincrement()) @db.UnsignedInt
+  User_Idx  Int      @default(0) @db.UnsignedInt
+  Server_ID Int      @default(0) @db.UnsignedTinyInt
+  Date_Time DateTime @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tbl_characterpoint_bliss {
+  cpt_idx         Int       @id @default(autoincrement()) @db.UnsignedInt
+  cpt_user_idx    String?   @db.VarChar(20)
+  cpt_char_idx    String?   @db.VarChar(20)
+  cpt_guild_idx   String?   @db.VarChar(20)
+  cpt_char_name   String?   @db.VarChar(20)
+  cpt_point       Int?      @default(0) @db.UnsignedInt
+  cpt_get_point   Int?      @default(0) @db.UnsignedInt
+  cpt_update_date DateTime? @db.DateTime(0)
+  cpt_del_point   Int       @default(0)
+
+  @@index([cpt_char_idx], map: "idx_char_idx")
+  @@index([cpt_guild_idx], map: "idx_cpt_guild_idx")
+  @@index([cpt_user_idx], map: "idx_cpt_user_idx")
+  @@index([cpt_idx], map: "mpt_idx")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tbl_eventipad {
+  a_user_index       Int      @default(0)
+  a_count            Int      @default(0)
+  a_last_update_date DateTime @db.DateTime(0)
+
+  @@index([a_user_index], map: "UserIndex")
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tbl_eventzorro {
+  a_user_index       Int      @default(0)
+  a_count            Int      @default(0)
+  a_last_update_date DateTime @db.DateTime(0)
+
+  @@index([a_user_index], map: "UserIndex")
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tbl_expertcollector {
+  a_user_index Int @default(0)
+  a_notebook   Int @default(0)
+  a_monitor    Int @default(0)
+  a_camera     Int @default(0)
+  a_hdd        Int @default(0)
+  a_succubus   Int @default(0)
+  a_agro       Int @default(0)
+
+  @@index([a_user_index], map: "UserIndex")
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tbl_findfriendevent {
+  a_server     Int    @default(0)
+  a_user_index Int    @default(0)
+  a_char_index Int    @default(0)
+  a_nick       String @default("") @db.VarChar(50)
+
+  @@index([a_char_index], map: "char_idx")
+  @@index([a_server], map: "server_idx")
+  @@index([a_user_index], map: "user_idx")
+  @@ignore
+}
+
+model tbl_killerebus {
+  a_index      Int      @id @default(autoincrement())
+  a_user_index Int      @default(0)
+  a_char_index Int      @default(0)
+  a_char_level Int      @default(0)
+  a_server     Int      @default(0) @db.TinyInt
+  a_datestamp  DateTime @db.DateTime(0)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tbl_membercoupon_point {
+  user_idx  Int      @default(0)
+  user_id   String   @default("") @db.VarChar(50)
+  get_point Int      @default(0)
+  get_date  DateTime @db.DateTime(0)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tbl_membercoupon_point_log {
+  user_idx    Int      @default(0)
+  user_id     String   @default("0") @db.VarChar(10)
+  get_point   Int      @default(0)
+  insert_time DateTime @db.DateTime(0)
+
+  @@ignore
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tbl_memberpoint {
+  mpt_idx         Int       @id @default(autoincrement()) @db.UnsignedInt
+  mpt_user_idx    String?   @db.VarChar(30)
+  mpt_user_id     String?   @db.VarChar(30)
+  mpt_user_name   String?   @db.VarChar(20)
+  mpt_user_point  Int?      @default(0) @db.UnsignedInt
+  mpt_get_point   Int?      @default(0) @db.UnsignedInt
+  mpt_update_date DateTime? @db.DateTime(0)
+
+  @@index([mpt_user_id], map: "idx_user_id")
+  @@index([mpt_user_idx], map: "idx_user_idx")
+  @@index([mpt_idx], map: "mpt_idx")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tbl_playtime_event_temp {
+  a_index         Int       @default(0) @db.UnsignedInt
+  a_user_index    Int       @default(0)
+  pla_insert_time DateTime? @db.DateTime(0)
+
+  @@ignore
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tbl_pointlog {
+  ptl_idx         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  ptl_point_idx   Int?      @db.UnsignedInt
+  ptl_point_code  String    @default("") @db.Char(3)
+  ptl_user_idx    String    @default("") @db.VarChar(30)
+  ptl_user_id     String?   @db.VarChar(30)
+  ptl_server      String?   @db.Char(3)
+  ptl_char_idx    String?   @db.VarChar(30)
+  ptl_prev_point  Int?      @default(0) @db.UnsignedInt
+  ptl_use_point   Int?      @default(0) @db.UnsignedInt
+  ptl_get_point   Int?      @default(0) @db.UnsignedInt
+  ptl_point       Int?      @default(0) @db.UnsignedInt
+  ptl_desc        String?   @db.VarChar(100)
+  ptl_insert_time DateTime? @db.DateTime(0)
+
+  @@index([ptl_char_idx], map: "idx_char_idx")
+  @@index([ptl_insert_time], map: "idx_insert_time")
+  @@index([ptl_point_code], map: "idx_point_code")
+  @@index([ptl_point_idx], map: "idx_point_idx")
+  @@index([ptl_user_idx], map: "idx_user_idx")
+  @@index([ptl_idx], map: "ptl_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tbl_ticket {
+  tkt_idx        Int       @id @default(autoincrement()) @db.UnsignedSmallInt
+  tkt_coupon_no  String    @default("") @db.VarChar(20)
+  tkt_user_idx   Int?      @db.UnsignedInt
+  tkt_game_type  String?   @db.Char(2)
+  tkt_used       String    @default("N") @db.Char(1)
+  tkt_issue_date DateTime? @db.DateTime(0)
+
+  @@index([tkt_user_idx, tkt_game_type], map: "IDX_UserIdx_GameType")
+}
+
+enum t_manage_db_a_type {
+  DATA
+  CHAR
+}
+
+enum t_manage_users_a_master {
+  N
+  Y
+}
+
+enum t_charinfo_user_a_priv_disconnect {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_char_delete {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_char_block {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_char_recover {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_char_changename {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_inven {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_view_castle {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_view_guild {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_guild_changename {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_log_all {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_guild_changeboss {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_user_comment {
+  Y
+  N
+}
+
+enum t_charinfo_user_a_priv_autogive {
+  Y
+  N
+}
