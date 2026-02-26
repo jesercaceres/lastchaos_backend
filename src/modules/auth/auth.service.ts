@@ -24,31 +24,26 @@ export class AuthService {
       throw new Error('Este e-mail já está em uso.');
     }
 
-    // 2. Faz o hash UMA única vez da senha que já sabemos que está certa
     const hashedPassword = await hashPassword(data.passwd);
 
     try {
-      // 3. Salva no site
       const webAccount = await this.userRepository.createWebAccount(
         data.userId,
         hashedPassword,
         data.email
       );
 
-      // 4. Salva no jogo
       await this.gameUserRepository.createGameAccount(
         data.userId,
-        webAccount.userCode // Usa o ID gerado!
+        webAccount.userCode
       );
 
       return { message: 'Conta criada com sucesso!', userId: webAccount.userId };
 
     } catch (error: any) {
-      // 👇 AGORA SIM! Vamos cuspir o erro original do Prisma no console!
-      console.error("🚨 ERRO REAL DO PRISMA AQUI:", error);
+      console.error("🚨 ERRO INTERNO AO CRIAR CONTA (PRISMA):", error);
 
-      // E jogamos o erro original pra frente, sem esconder nada
-      throw error;
+      throw new Error('Ocorreu um erro interno ao processar o seu registo. Tente novamente mais tarde.');
     }
   }
 

@@ -1,33 +1,24 @@
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dtos/register.dto';
+import { registerSchema } from './dtos/register.dto';
+import { loginSchema } from './dtos/login.dto';
 
 export class AuthController {
     private authService = new AuthService();
 
     public register = async (req: Request, res: Response): Promise<void> => {
         try {
-            const registerData: RegisterDto = {
-                userId: req.body.userId,
-                passwd: req.body.passwd,
-                confirmPasswd: req.body.confirmPasswd,
-                email: req.body.email
-            };
+            // 2. O Zod pega o req.body e testa contra todas aquelas regras que criámos
+            const validation = registerSchema.safeParse(req.body);
 
-            // 1. Validação Burra: Campos em branco
-            if (!registerData.userId || !registerData.passwd || !registerData.email) {
-                res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
+            // 3. Se chumbou na validação (ex: e-mail inválido, senha sem maiúscula)
+            if (!validation.success) {
+                res.status(400).json({ errors: validation.error.format() });
                 return;
             }
 
-            // 2. Validação Burra: Senhas coincidem em texto puro?
-            if (registerData.passwd !== registerData.confirmPasswd) {
-                res.status(400).json({ message: 'A senha e a confirmação de senha não coincidem.' });
-                return;
-            }
-
-            // Se passou pelo leão de chácara, manda pro Service!
-            const result = await this.authService.register(registerData);
+            // 4. Se passou, o Zod entrega-nos os dados perfeitos e tipados dentro do "validation.data"
+            const result = await this.authService.register(validation.data);
             res.status(201).json(result);
 
         } catch (error: any) {
@@ -37,22 +28,20 @@ export class AuthController {
 
     public login = async (req: Request, res: Response): Promise<void> => {
         try {
-            const loginData = {
-                userId: req.body.userId,
-                passwd: req.body.passwd
-            };
+            // Fazemos o mesmo para o Login
+            const validation = loginSchema.safeParse(req.body);
 
-            if (!loginData.userId || !loginData.passwd) {
-                res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
+            if (!validation.success) {
+                res.status(400).json({ errors: validation.error.format() });
                 return;
             }
-            const result = await this.authService.login(loginData);
+
+            // Passamos os dados validados para o Service
+            const result = await this.authService.login(validation.data);
             res.status(200).json(result);
 
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(401).json({ error: error.message }); // 401 = Unauthorized
         }
     }
-
-
 }
