@@ -4,7 +4,8 @@ import { comparePassword, hashPassword } from '../../shared/utils/hash';
 import { RegisterDto } from './dtos/register.dto';
 import { LoginDto } from './dtos/login.dto';
 import jwt from 'jsonwebtoken';
-
+import { AppError } from '../../shared/errors/AppError';
+import { env } from '../../config/env';
 
 export class AuthService {
   private userRepository = new UserRepository();
@@ -16,12 +17,13 @@ export class AuthService {
     const userExists = await this.userRepository.findByUsername(data.userId);
     const emailExists = await this.userRepository.findByEmail(data.email);
 
+    // 3. Usa AppError com status 409 (Conflict - já existe)
     if (userExists) {
-      throw new Error('Este nome de usuário já está em uso.');
+      throw new AppError('Este nome de usuário já está em uso.', 409);
     }
 
     if (emailExists) {
-      throw new Error('Este e-mail já está em uso.');
+      throw new AppError('Este e-mail já está em uso.', 409);
     }
 
     const hashedPassword = await hashPassword(data.passwd);
@@ -42,8 +44,8 @@ export class AuthService {
 
     } catch (error: any) {
       console.error("🚨 ERRO INTERNO AO CRIAR CONTA (PRISMA):", error);
-
-      throw new Error('Ocorreu um erro interno ao processar o seu registo. Tente novamente mais tarde.');
+      // 4. Usa AppError com status 500 (Internal Server Error)
+      throw new AppError('Ocorreu um erro interno ao processar o seu registo. Tente novamente mais tarde.', 500);
     }
   }
 
@@ -51,26 +53,26 @@ export class AuthService {
 
     const user = await this.userRepository.findByUsername(data.userId);
 
+    // 5. Usa AppError com status 401 (Unauthorized - Não autorizado)
     if (!user || !user.passwd) {
-      throw new Error('Usuário ou senha incorretos.');
+      throw new AppError('Usuário ou senha incorretos.', 401);
     }
 
     const isPasswordValid = await comparePassword(data.passwd, user.passwd);
 
     if (!isPasswordValid) {
-      throw new Error('Usuário ou senha incorretos.');
+      throw new AppError('Usuário ou senha incorretos.', 401);
     }
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) throw new Error('JWT_SECRET não configurado');
-
-
+    // 6. Usamos diretamente a chave validada e garantida pelo nosso env.ts!
+    // Não precisamos mais do "if (!secret)" porque o arquivo env.ts já derrubaria 
+    // o servidor caso a chave não existisse logo na inicialização.
     const token = jwt.sign(
       {
         userCode: user.userCode,
         userId: user.userId
       },
-      secret,
+      env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
