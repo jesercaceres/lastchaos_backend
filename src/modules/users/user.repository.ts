@@ -1,4 +1,5 @@
 import { prisma } from '../../config/prisma';
+import { Prisma } from '@prisma/client'; // 1. Importar o tipo Prisma
 
 export class UserRepository {
   async findByUsername(userId: string) {
@@ -7,30 +8,24 @@ export class UserRepository {
     });
   }
 
- 
-async findByEmail(email: string) {
-  return await prisma.bgUser.findFirst({
-    where: { email }
-  });
-}
+  async findByEmail(email: string) {
+    return await prisma.bgUser.findFirst({
+      where: { email }
+    });
+  }
 
-
-  // Cria a conta master no site
-  async createWebAccount(userId: string, passwordHash: string, email: string) {
+  async createWebAccount(userId: string, passwordHash: string, email: string, tx: Prisma.TransactionClient = prisma) {
     
-    // 1. Busca o usuário com o maior userCode atualmente no banco
-    const lastUser = await prisma.bgUser.findFirst({
+    const lastUser = await tx.bgUser.findFirst({
       orderBy: { userCode: 'desc' },
       select: { userCode: true }
     });
 
-    // 2. Se achou, soma 1. Se o banco estiver vazio, começa no ID 1.
     const nextUserCode = (lastUser?.userCode || 0) + 1;
 
-    // 3. Salva no banco enviando o nosso nextUserCode manualmente
-    return await prisma.bgUser.create({
+    return await tx.bgUser.create({
       data: {
-        userCode: nextUserCode, // <--- Agora nós passamos o ID!
+        userCode: nextUserCode,
         userId: userId,
         passwd: passwordHash,
         email: email,

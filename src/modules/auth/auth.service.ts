@@ -6,6 +6,7 @@ import { LoginDto } from './dtos/login.dto';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../../shared/errors/AppError';
 import { env } from '../../config/env';
+import { prisma } from '../../config/prisma'; 
 
 export class AuthService {
   private userRepository = new UserRepository();
@@ -13,11 +14,9 @@ export class AuthService {
 
   async register(data: RegisterDto) {
 
-    // 1. Validação Inteligente: Vai no DB ver se existe
     const userExists = await this.userRepository.findByUsername(data.userId);
     const emailExists = await this.userRepository.findByEmail(data.email);
 
-    // 3. Usa AppError com status 409 (Conflict - já existe)
     if (userExists) {
       throw new AppError('Este nome de usuário já está em uso.', 409);
     }
@@ -29,31 +28,36 @@ export class AuthService {
     const hashedPassword = await hashPassword(data.passwd);
 
     try {
-      const webAccount = await this.userRepository.createWebAccount(
-        data.userId,
-        hashedPassword,
-        data.email
-      );
+      let createdUserId = '';
 
-      await this.gameUserRepository.createGameAccount(
-        data.userId,
-        webAccount.userCode
-      );
+      await prisma.$transaction(async (tx) => {
+        const webAccount = await this.userRepository.createWebAccount(
+          data.userId,
+          hashedPassword,
+          data.email,
+          tx 
+        );
 
-      return { message: 'Conta criada com sucesso!', userId: webAccount.userId };
+        await this.gameUserRepository.createGameAccount(
+          data.userId,
+          webAccount.userCode,
+          tx 
+        );
+
+        createdUserId = webAccount.userId;
+      });
+
+      return { message: 'Conta criada com sucesso!', userId: createdUserId };
 
     } catch (error: any) {
       console.error("🚨 ERRO INTERNO AO CRIAR CONTA (PRISMA):", error);
-      // 4. Usa AppError com status 500 (Internal Server Error)
       throw new AppError('Ocorreu um erro interno ao processar o seu registo. Tente novamente mais tarde.', 500);
     }
   }
 
   async login(data: LoginDto) {
-
     const user = await this.userRepository.findByUsername(data.userId);
 
-    // 5. Usa AppError com status 401 (Unauthorized - Não autorizado)
     if (!user || !user.passwd) {
       throw new AppError('Usuário ou senha incorretos.', 401);
     }
@@ -64,14 +68,8 @@ export class AuthService {
       throw new AppError('Usuário ou senha incorretos.', 401);
     }
 
-    // 6. Usamos diretamente a chave validada e garantida pelo nosso env.ts!
-    // Não precisamos mais do "if (!secret)" porque o arquivo env.ts já derrubaria 
-    // o servidor caso a chave não existisse logo na inicialização.
     const token = jwt.sign(
-      {
-        userCode: user.userCode,
-        userId: user.userId
-      },
+      { userCode: user.userCode, userId: user.userId },
       env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -79,11 +77,7 @@ export class AuthService {
     return {
       message: 'Login bem-sucedido!',
       token,
-      user: {
-        userCode: user.userCode,
-        userId: user.userId,
-        email: user.email
-      }
+      user: { userCode: user.userCode, userId: user.userId, email: user.email }
     };
   }
 }
