@@ -14,6 +14,17 @@ export class UserRepository {
     });
   }
 
+  async findByIdentifier(identifier: string) {
+    return await prisma.bgUser.findFirst({
+      where: {
+        OR: [
+          { userId: identifier },
+          { email: identifier }
+        ]
+      }
+    });
+  }
+
   async createWebAccount(userId: string, passwordHash: string, email: string, tx: Prisma.TransactionClient = prisma) {
     
     const lastUser = await tx.bgUser.findFirst({

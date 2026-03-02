@@ -3,10 +3,10 @@ import { GameUserRepository } from '../game/gameUser.repository';
 import { comparePassword, hashPassword } from '../../shared/utils/hash';
 import { RegisterDto } from './dtos/register.dto';
 import { LoginDto } from './dtos/login.dto';
-import jwt from 'jsonwebtoken';
 import { AppError } from '../../shared/errors/AppError';
-import { env } from '../../config/env';
 import { prisma } from '../../config/prisma'; 
+import { ForgotPasswordDto } from './dtos/forgotPasswd.dto';
+import { generateAuthToken } from '../../shared/utils/jwt';
 
 export class AuthService {
   private userRepository = new UserRepository();
@@ -68,11 +68,7 @@ export class AuthService {
       throw new AppError('Usuário ou senha incorretos.', 401);
     }
 
-    const token = jwt.sign(
-      { userCode: user.userCode, userId: user.userId },
-      env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    const token = generateAuthToken({ userCode: user.userCode, userId: user.userId });
 
     return {
       message: 'Login bem-sucedido!',
@@ -80,4 +76,5 @@ export class AuthService {
       user: { userCode: user.userCode, userId: user.userId, email: user.email }
     };
   }
+
 }
