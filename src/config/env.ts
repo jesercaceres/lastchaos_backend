@@ -8,7 +8,12 @@ dotenv.config();
 const envSchema = z.object({
     PORT: z.string().default('3000'), // Porta padrão 3000 se não for definida
     JWT_SECRET: z.string().min(10,'O JWT_SECRET no .env é obrigatório e deve ser seguro.'),
-    DATABASE_URL: z.string().url('A DATABASE_URL é obrigatória e deve ser uma URL válida.')
+    DATABASE_URL: z.string().url('A DATABASE_URL é obrigatória e deve ser uma URL válida.'),
+    MAIL_HOST: z.string(),
+    MAIL_PORT: z.string().transform((v) => Number(v)),
+    MAIL_USER: z.string(),
+    MAIL_PASS: z.string(),
+    MAIL_FROM: z.string().email()
 });
 
 // 3. Valida os dados reais contra o nosso esquema

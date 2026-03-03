@@ -1,18 +1,23 @@
+import jwt from 'jsonwebtoken';
 import { UserRepository } from '../users/user.repository';
 import { GameUserRepository } from '../game/gameUser.repository';
 import { comparePassword, hashPassword } from '../../shared/utils/hash';
 import { RegisterDto } from './dtos/register.dto';
 import { LoginDto } from './dtos/login.dto';
 import { AppError } from '../../shared/errors/AppError';
-import { prisma } from '../../config/prisma'; 
+import { prisma } from '../../config/prisma';
 import { ForgotPasswordDto } from './dtos/forgotPasswd.dto';
-import { generateAuthToken } from '../../shared/utils/jwt';
+import { generateAuthToken, generateResetToken, verifyResetToken } from '../../shared/utils/jwt';
+import { MailProvider } from '../../shared/providers/MailProvider';
+import { ResetPasswordDto } from './dtos/resetPasswd.dto';
+
 
 export class AuthService {
   private userRepository = new UserRepository();
   private gameUserRepository = new GameUserRepository();
+  private mailProvider = new MailProvider();
 
-  async register(data: RegisterDto) {
+  public async register(data: RegisterDto) {
 
     const userExists = await this.userRepository.findByUsername(data.userId);
     const emailExists = await this.userRepository.findByEmail(data.email);
@@ -35,13 +40,13 @@ export class AuthService {
           data.userId,
           hashedPassword,
           data.email,
-          tx 
+          tx
         );
 
         await this.gameUserRepository.createGameAccount(
           data.userId,
           webAccount.userCode,
-          tx 
+          tx
         );
 
         createdUserId = webAccount.userId;
@@ -55,7 +60,7 @@ export class AuthService {
     }
   }
 
-  async login(data: LoginDto) {
+  public async login(data: LoginDto) {
     const user = await this.userRepository.findByUsername(data.userId);
 
     if (!user || !user.passwd) {
@@ -77,4 +82,62 @@ export class AuthService {
     };
   }
 
+  public async forgotPassword(data: ForgotPasswordDto) {
+    const user = await this.userRepository.findByIdentifier(data.identifier);
+
+    if (!user || !user.email) {
+      throw new AppError('Se este usuário existir e tiver um e-mail vinculado, um link de recuperação será enviado.', 200);
+    }
+
+    const token = generateResetToken(
+      { userCode: user.userCode, email: user.email },
+      user.passwd!
+    );
+
+    await this.mailProvider.sendPasswordResetMail(user.email, token, user.userId);
+
+    const secretEmail = user.email.replace(/(.{2}).+(@.+)/, '$1****$2');
+
+    return { message: `Link de recuperação enviado para o e-mail: ${secretEmail}` };
+  }
+
+ public async resetPassword(data: ResetPasswordDto) {
+    // 2. CORREÇÃO: Use jwt.decode para apenas ler o conteúdo sem validar a assinatura
+    // Não usamos verifyResetToken aqui porque ainda não temos o hash da senha antiga para validar
+    const decoded = jwt.decode(data.token) as { email: string };
+
+    if (!decoded || !decoded.email) {
+      throw new AppError('Token de recuperação inválido.', 400);
+    }
+
+    // 3. Busca o usuário para obter o passwd (hash antigo) necessário para validar a assinatura
+    const user = await this.userRepository.findByEmail(decoded.email);
+    
+    if (!user || !user.passwd) {
+      throw new AppError('Token de recuperação inválido.', 400);
+    }
+
+    try {
+      // 4. Agora sim, validamos a assinatura usando o segredo dinâmico
+      verifyResetToken(data.token, user.passwd);
+
+      // 5. Gera o novo hash para a nova senha
+      const newHashedPassword = await hashPassword(data.newPassword);
+
+      // 6. Atualiza no banco usando o userId (conforme definido no seu esquema)
+      await prisma.bgUser.update({
+        where: { userId: user.userId },
+        data: { 
+          passwd: newHashedPassword,
+          updateTime: new Date()
+        }
+      });
+
+      return { message: 'Senha alterada com sucesso! Já pode realizar o login.' };
+
+    } catch (error) {
+      // Se a assinatura falhar (senha já mudou ou expirou), cai aqui
+      throw new AppError('Este link de recuperação expirou ou já foi utilizado.', 401);
+    }
+  }
 }
