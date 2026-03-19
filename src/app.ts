@@ -1,9 +1,10 @@
 import express from 'express';
+import cors from 'cors';
 import routes from './routes';
 import { errorMiddleware } from './shared/middlewares/error.middleware'; // 1. Importamos o nosso middleware
 
 const app = express();
-
+app.use(cors());
 app.use(express.json());
 
 // As nossas rotas normais

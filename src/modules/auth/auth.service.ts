@@ -133,7 +133,7 @@ export class AuthService {
         }
       });
 
-      return { message: 'Senha alterada com sucesso! Já pode realizar o login.' };
+      return { message: 'Senha alterada com sucesso!' };
 
     } catch (error) {
       // Se a assinatura falhar (senha já mudou ou expirou), cai aqui
