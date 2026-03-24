@@ -17,7 +17,7 @@ export class MailProvider {
 
   async sendPasswordResetMail(to: string, token: string, userId: string) {
     // URL que o usuário clicará no e-mail
-    const resetLink = `http://localhost:3000/auth/reset-password?token=${token}&userId=${userId}`;
+    const resetLink = `http://localhost:5173/recovery?token=${token}&userId=${userId}`;
 
     await this.transporter.sendMail({
       from: env.MAIL_FROM,

@@ -102,8 +102,7 @@ export class AuthService {
   }
 
  public async resetPassword(data: ResetPasswordDto) {
-    // 2. CORREÇÃO: Use jwt.decode para apenas ler o conteúdo sem validar a assinatura
-    // Não usamos verifyResetToken aqui porque ainda não temos o hash da senha antiga para validar
+    
     const decoded = jwt.decode(data.token) as { email: string };
 
     if (!decoded || !decoded.email) {
